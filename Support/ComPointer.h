@@ -1,111 +1,81 @@
-﻿
-/*
-	This is free and unencumbered software released into the public domain.
+﻿#pragma once
 
-	Anyone is free to copy, modify, publish, use, compile, sell, or
-	distribute this software, either in source code form or as a compiled
-	binary, for any purpose, commercial or non-commercial, and by any
-	means.
+#include <type_traits>//引入做类型检查
 
-	In jurisdictions that recognize copyright laws, the author or authors
-	of this software dedicate any and all copyright interest in the
-	software to the public domain. We make this dedication for the benefit
-	of the public at large and to the detriment of our heirs and
-	successors. We intend this dedication to be an overt act of
-	relinquishment in perpetuity of all present and future rights to this
-	software under copyright law.
-
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-	IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-	OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-	OTHER DEALINGS IN THE SOFTWARE.
-
-	For more information, please refer to <http://unlicense.org/>
-
-	https://gist.github.com/Ohjurot/e17a5f04e9719a44866b4f38a4f2f680
-	Created by Ludwig Fuechsl
-	Last Change: 07.04.2023
-*/
-#pragma once
-
-#include <type_traits>
-
-
-/// <summary>
-/// A template class for Microsoft com pointer (I like this one more the the WRL pointer)
-/// </summary>
-/// <typeparam name="T">Com pointer Type</typeparam>
 template<typename CT, typename = std::enable_if_t<std::is_base_of_v<IUnknown, CT>>>
+/*
+template<typename CT>是一个模版，可以用它来包装任何类型的 COM 接口
+（std::enable_if_t<std::is_base_of_v<IUnknown, CT>>）：
+强制规定：类型 CT 必须继承自 IUnknown（IUnknown 是所有 COM 接口的基类）。
+如果传了一个普通的类进去，编译器会直接报错，防止用错地方。
+*/
 class ComPointer
 {
 public:
-	// Default empty constructor
-	ComPointer() = default;
+	//生命周期管理（构造器们）主要是初始化
+	ComPointer() = default;	// 1、默认构造函数=空指针
 
-	// Construct by raw pointer (add ref)
-	ComPointer(CT* pointer)
+	ComPointer(CT* pointer) // 2、用最原始的定义指针法构造 
 	{
-		SetPointerAndAddRef(pointer);
+		SetPointerAndAddRef(pointer); //  set以及给引用计数+1
 	}
 
-	ComPointer(const ComPointer<CT>& other)
+	ComPointer(const ComPointer<CT>& other) // 3、 拷贝构造函数
 	{
-		SetPointerAndAddRef(other.m_pointer);
+		SetPointerAndAddRef(other.m_pointer); //给引用原对象的引用计数+1
 	}
-	ComPointer(ComPointer<CT>&& other) noexcept
+	ComPointer(ComPointer<CT>&& other) noexcept // 4、 移动构造函数
 	{
 		m_pointer = other.m_pointer;
-		other.m_pointer = nullptr;
+		other.m_pointer = nullptr; 
 	}
 
 	~ComPointer()
 	{
-		ClearPointer();
+		ClearPointer(); //析构
 	}
 
-	ComPointer<CT>& operator=(const ComPointer<CT>& other)
+	//赋值运算符重载 （后续的赋值、改变
+	ComPointer<CT>& operator=(const ComPointer<CT>& other)//拷贝赋值运算符
 	{
-		ClearPointer();
-		SetPointerAndAddRef(other.m_pointer);
+		ClearPointer();//释放手里的
+		SetPointerAndAddRef(other.m_pointer);//引用other且+1
 		return *this;
 	}
-	ComPointer<CT>& operator=(ComPointer<CT>&& other)
+	ComPointer<CT>& operator=(ComPointer<CT>&& other)//移动赋值运算符
 	{
 		ClearPointer();
-
 		m_pointer = other.m_pointer;
 		other.m_pointer = nullptr;
 		return *this;
 	}
-	ComPointer<CT>& operator=(CT* other)
+	ComPointer<CT>& operator=(CT* other)// 直接用原生的指针来赋值
 	{
 		ClearPointer();
 		SetPointerAndAddRef(other);
 		return *this;
 	}
 
-	ULONG Release()
+	ULONG Release() //手动释放指针
 	{
 		return ClearPointer();
 	}
 
 	CT* GetRef()
 	{
-		if (m_pointer)
+		if (m_pointer) //如果指针非空
 		{
-			m_pointer->AddRef();
-			return m_pointer;
+			m_pointer->AddRef(); //加一个引用计数
+			return m_pointer; //把指针给你(用完要自己release)
 		}
-		return nullptr;
+		return nullptr; //这没东西
 	}
 	CT* Get()
 	{
-		return m_pointer;
+		return m_pointer;  //全给你
 	}
 
+	// 查询接口：类似于面向对象里的向下/向上转型，询问这个对象是否支持另一种 COM 接口
 	template<typename T>
 	bool QueryInterface(ComPointer<T>& other, HRESULT* errorCode = nullptr)
 	{
