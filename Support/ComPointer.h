@@ -81,7 +81,8 @@ public:
 	{
 		if (m_pointer)
 		{
-			HRESULT result = m_pointer->QueryInterface(IID_PPV_ARGS(&other));//IID_PPV_ARGS把传入的指针类型转换成对应的IID和void**，方便调用QueryInterface
+			HRESULT result = m_pointer->QueryInterface(IID_PPV_ARGS(&other));
+			//  IID_PPV_ARGS核心功能是将 接口的 GUID（IID） 和 接口指针的地址 打包成一个参数，传递给需要这两个参数的 COM 函数。
 			if (errorCode) *errorCode = result;
 			return result == S_OK;
 		}
