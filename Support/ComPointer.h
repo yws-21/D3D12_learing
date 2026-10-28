@@ -81,13 +81,13 @@ public:
 	{
 		if (m_pointer)
 		{
-			HRESULT result = m_pointer->QueryInterface(IID_PPV_ARGS(&other));
+			HRESULT result = m_pointer->QueryInterface(IID_PPV_ARGS(&other));//IID_PPV_ARGS把传入的指针类型转换成对应的IID和void**，方便调用QueryInterface
 			if (errorCode) *errorCode = result;
 			return result == S_OK;
 		}
 		return false;
 	}
-
+	//关系运算符重载
 	bool operator==(const ComPointer<CT>& other)
 	{
 		return m_pointer == other.m_pointer;
@@ -116,6 +116,7 @@ public:
 	}
 
 private:
+	// 内部清理函数：如果当前有指针，就调用它的 Release() 并设为 nullptr
 	ULONG ClearPointer()
 	{
 		ULONG newRef = 0;
@@ -128,6 +129,7 @@ private:
 		return newRef;
 	}
 
+	// 内部绑定函数：把新指针存起来，如果不为空就执行 AddRef()
 	void SetPointerAndAddRef(CT* pointer)
 	{
 		m_pointer = pointer;
