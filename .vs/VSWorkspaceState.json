@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Debug"
+    "\\D3D",
+    "\\Support"
   ],
-  "SelectedNode": "\\Debug\\DXDDebugLayer.cpp",
+  "SelectedNode": "\\main.cpp",
   "PreviewInSolutionExplorer": false
 }

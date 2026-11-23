@@ -1,12 +1,25 @@
+#include "DXContext.h"
 
+/*
+*   GPU (DEVICE)
+*   <----->
+*   Command Queue (WorkSet ,WorkSet,Sync) 命令队列（同步机制）
+*   <--
+*   CPU WorkSet (Setup,Setup,ChangeState,Setup,Draw) ==ComandList 命令列表
+*/
 
 bool DXContext::Init() //初始化所有D3D12核心对象，包括设备、命令队列、围栏、事件、命令分配器和命令列表
 {
-    //创建设备
+    //(检查是否)创建设备
     if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device))))
     {
-        return false;
-    }
+        D3D12_ COMMAND_QUEUE_FESC cmdQUEUEDesc{};//声明命令队列描述结构
+		cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //Type能提交和执行的命令列表类型
+		m_device->CreateCommandQueuel(,IID_PPV_ARGS(&m_cmdQueue));//描述结构
+
+
+        return false;//默认返回
+    } 
 
     //命令队列
     D3D12_COMMAND_QUEUE_DESC cmdQueueDesc;
