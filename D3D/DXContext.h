@@ -12,17 +12,18 @@ public:
 	bool Init();
 	void Shutdown();
 
-	void SignalAndWait();//同步机制
+	void SignalAndWait();//同步机制，等待信号
 
 	ID3D12GraphicsCommandList7* InitCommandList();//初始化命令列表
 	void ExecuteCommandList(); //提交执行并等待
 
-	inline ComPointer<ID3D12Device10>& GetDevice() 
+	inline ComPointer<ID3D12Device10>& GetDevice() //让外部设备获取m_device
 	{
 		return m_device;
 	}
 
-	inline ComPointer<ID3D12CommandQueue>& GetCommandQueue()
+	inline ComPointer<ID3D12CommandQueue>& GetCommandQueue() //让外部设备获取m_cmdQueue
+	{
 	{
 		return m_cmdQueue;
 	}
@@ -40,7 +41,7 @@ private:
 
 	UINT64 m_fenceValue = 0; // 围栏值（单调递增）
     // CPU 端维护的计数器，每次同步时递增
-    // 通过比较 GPU 当前围栏值与此值，判断 GPU 是否追上了 CPU
+	// 通过比较 GPU 当前围栏值与此值，判断GPU 是否完成了 CPU 提交的命令
 
 	HANDLE m_fenceEvent = nullptr; // 围栏事件句柄（Windows 内核事件对象）
     // 当 GPU 完成命令并更新围栏值后，触发此事件

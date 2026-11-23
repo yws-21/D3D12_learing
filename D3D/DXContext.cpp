@@ -13,26 +13,19 @@ bool DXContext::Init() //初始化所有D3D12核心对象，包括设备、命令队列、围栏、事件
     //(检查是否)创建设备
     if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device))))
     {
-        D3D12_ COMMAND_QUEUE_FESC cmdQUEUEDesc{};//声明命令队列描述结构
-		cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //Type能提交和执行的命令列表类型
-		m_device->CreateCommandQueuel(,IID_PPV_ARGS(&m_cmdQueue));//描述结构
-
-
-        return false;//默认返回
-    } 
-
-    //命令队列
-    D3D12_COMMAND_QUEUE_DESC cmdQueueDesc;
-    cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //DIRECT type用来执行常规渲染
-    cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
-    cmdQueueDesc.NodeMask = 0; //默认设置，系统会自动推断主要的GPU
-    cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-
+        //命令队列描述结构
+        D3D12_ COMMAND_QUEUE_FESC cmdQUEUEDesc{};
+		cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //Type:能提交和执行的命令列表类型
+		cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; //Priority:命令队列的优先级
+		cmdQueueDesc.NodeMask = 0; //NodeMask:指定命令队列将在哪个GPU节点上执行，0表示默认节点
+        cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; //Flags:命令队列的标志
+ 
+    //检查队列创建结果
     if (FAILED(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue))))
     {
         return false;
     }
-
+   
     //围栏
     if (FAILED(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence))))
     {
@@ -57,7 +50,7 @@ bool DXContext::Init() //初始化所有D3D12核心对象，包括设备、命令队列、围栏、事件
         return false;
     }
 
-    return true;
+    return true;//默认返回
 
 }
 void DXContext::Shutdown()//资源释放
@@ -74,8 +67,15 @@ void DXContext::Shutdown()//资源释放
 }
 void DXContext::SignalAndWait() //需要设置同步点是调用
 {
-    m_fenceValue++;//递增期望值
+    m_fenceValue++;//递增目标值
     m_cmdQueue->Signal(m_fence, m_fenceValue); // GPU 执行到此处时更新围栏
+
+   /* while (m_fence->GetCompletedValue() < m_fenceValue) //检查GPU是否完成了CPU提交的命令
+    *{
+	*	SwitchToThread(); //如果没有完成，则让出CPU时间片，避免忙等待
+    *} 
+    *这是轮询一直问，效率低，所以加了下面的阻塞
+    */
 
     if (SUCCEEDED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent))) //注册事件
     {
