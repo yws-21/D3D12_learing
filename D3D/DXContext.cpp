@@ -19,23 +19,26 @@ bool DXContext::Init() //初始化所有D3D12核心对象，包括设备、命令队列、围栏、事件
 		cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; //Priority:命令队列的优先级
 		cmdQueueDesc.NodeMask = 0; //NodeMask:指定命令队列将在哪个GPU节点上执行，0表示默认节点
         cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; //Flags:命令队列的标志
- 
-    //检查队列创建结果
+
+    //检查创建结果:
+
+    //命令列表
     if (FAILED(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue))))
-    {
+    {  
         return false;
     }
    
     //围栏
     if (FAILED(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence))))
     {
-        return false;
+		return false;
     }
 
-    //事件
+    //创建一个事件对象，返回一个句柄。参数分别为：安全属性、手动重置参数、初始状态、事件名称
     m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-    if (!m_fenceEvent) {
-        return false;
+    if ( m_fenceEvent != nullptr)
+    {
+		return false;
     }
 
     //命令分配器
@@ -57,6 +60,7 @@ void DXContext::Shutdown()//资源释放
 {
     m_cmdAllocator.Release();
     m_cmdList.Release();
+
     if (m_fenceEvent)
     {
         CloseHandle(m_fenceEvent);//关闭事件句柄
@@ -65,9 +69,10 @@ void DXContext::Shutdown()//资源释放
     m_cmdQueue.Release();
     m_device.Release();
 }
-void DXContext::SignalAndWait() //需要设置同步点是调用
+
+void DXContext::SignalAndWait() //同步机制
 {
-    m_fenceValue++;//递增目标值
+    m_fenceValue++;//递增目标值 
     m_cmdQueue->Signal(m_fence, m_fenceValue); // GPU 执行到此处时更新围栏
 
    /* while (m_fence->GetCompletedValue() < m_fenceValue) //检查GPU是否完成了CPU提交的命令
@@ -77,22 +82,42 @@ void DXContext::SignalAndWait() //需要设置同步点是调用
     *这是轮询一直问，效率低，所以加了下面的阻塞
     */
 
-    if (SUCCEEDED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent))) //注册事件
-    {
+    /*CPU线程                           GPU
+        |                                |
+        |--提交命令到命令队列----------->|
+        |                                |--执行GPU命令
+        | --SetEventOnCompletion-------- | (注册:当围栏到达m_fenceValue时，
+            | (注册回调 / 事件) | 触发m_fenceEvent)
+        |                                |
+        |--WaitForSingleObject-------- - | ← CPU线程在此被OS挂起
+        | (挂起，最多20s) | 不占用CPU执行时间
+        |                                |
+        |                                |--GPU命令执行完毕
+        |                                |--围栏值达到m_fenceValue
+        |                                |--触发m_fenceEvent
+        |                                |
+        | < --WAIT_OBJECT_0-------------- | ← OS唤醒CPU线程，继续执行
+     */
+
+	//WaitForSingleObject告知操作系统，CPU线程需要等待一个事件对象的状态变为有信号状态（通过其他线程激活），或者等待超时。操作系统就会将当CPU前线程挂起，直到事件对象被触发或者超时发生。
+	if (SUCCEEDED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent))) 
+    {    //使用SetEventOnCompletion函数设置一个事件，当GPU完成命令并更新围栏值时，触发该事件
         if (WaitForSingleObject(m_fenceEvent, 20000) != WAIT_OBJECT_0)//设定该线程睡眠（阻塞型），最大等待时间20s
         {
-            std::exit(-1); //这里是如果WaitForSingleObject函数的返回值不为WAIT_OBJECT_0（指定对象的状态已发出信号），（超时）则退出程序。
+            std::exit(-1);
+            //这里是如果WaitForSingleObject函数的返回值不为WAIT_OBJECT_0（指定对象的状态已发出信号），（超时）则退出程序。
         }
     }
     else {
         std::exit(-1); //退出程序
     }
 }
+
 ID3D12GraphicsCommandList7* DXContext::InitCommandList()//开启命令列表录制，返回命令列表指针
 {
 
     m_cmdAllocator->Reset();
-    m_cmdList->Reset(m_cmdAllocator, nullptr); //涉及到 ID3D12PiplineState，可设置初始管线状态，这里暂时不讨论。
+	m_cmdList->Reset(m_cmdAllocator, nullptr); //传入分配器和管线状态（nullptr表示不使用预设的管线状态对象）
     return m_cmdList;
 }
 void DXContext::ExecuteCommandList()
@@ -100,7 +125,8 @@ void DXContext::ExecuteCommandList()
     if (SUCCEEDED(m_cmdList->Close()))//命令列表执行前需要关闭命令录制
     {
         ID3D12CommandList* lists[] = { m_cmdList };
-        m_cmdQueue->ExecuteCommandLists(1, lists);
+		m_cmdQueue->ExecuteCommandLists(1, lists);//提交命令列表到命令队列执行
+        //参数:（要执行的列表数量，列表指针数组）
         SignalAndWait();
     }
 }

@@ -13,8 +13,8 @@ public:
 	void Shutdown();
 
 	void SignalAndWait();//同步机制，等待信号
-
-	ID3D12GraphicsCommandList7* InitCommandList();//初始化命令列表
+ 
+	ID3D12GraphicsCommandList7* InitCommandList();//初始化命令列表 并返回命令列表指针给外部使用
 	void ExecuteCommandList(); //提交执行并等待
 
 	inline ComPointer<ID3D12Device10>& GetDevice() //让外部设备获取m_device
@@ -32,8 +32,8 @@ private:
 	ComPointer<ID3D12Device10> m_device; //设备
 	ComPointer<ID3D12CommandQueue> m_cmdQueue; //命令队列
 
-	ComPointer<ID3D12CommandAllocator> m_cmdAllocator; //命令分配器，实质上是一块内存区域，是为命令列表提供的所有命令提供内存支持。
-	ComPointer<ID3D12GraphicsCommandList7> m_cmdList; //命令列表
+	ComPointer<ID3D12CommandAllocator> m_cmdAllocator; //命令分配器（负责存储），实质上是一块内存区域，是为命令列表提供的所有命令提供内存支持。
+	ComPointer<ID3D12GraphicsCommandList7> m_cmdList; //命令列表(	负责录制GPU命令，提交给命令队列执行)
 
 	ComPointer<ID3D12Fence1> m_fence; // 围栏对象（Fence）
 	// 一个可被 CPU 和 GPU 共同读写的计数器
@@ -43,7 +43,7 @@ private:
     // CPU 端维护的计数器，每次同步时递增
 	// 通过比较 GPU 当前围栏值与此值，判断GPU 是否完成了 CPU 提交的命令
 
-	HANDLE m_fenceEvent = nullptr; // 围栏事件句柄（Windows 内核事件对象）
+	HANDLE m_fenceEvent = nullptr; // 围栏事件句柄（Windows 内核事件对象）|||  handle是一种常用句柄类型
     // 当 GPU 完成命令并更新围栏值后，触发此事件
     // CPU 调用 WaitForSingleObject() 阻塞在此，被唤醒后继续执行
     // 避免了 CPU 忙等待（busy-wait）浪费资源
@@ -55,7 +55,7 @@ public:
 	DXContext(const DXContext&) = delete;
 	DXContext& operator = (const DXContext&) = delete;
 
-	inline static DXContext& Get()
+	inline static DXContext& Get()  B
 	{
 		static DXContext instance;
 		return instance;

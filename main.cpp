@@ -13,7 +13,11 @@ int main()
 	DXDebugLayer::Get().Init(); //调试层初始化
 	if (DXContext)::Get().Init()) //初始化D3D12核心对象
 	{
-
+		while (true)
+		{
+			auto* cmdList = DXContext::Get().InitCommandList(); //初始化命令列表
+			DXContext::Get().ExecuteCommandList(); //提交命令列表并等待GPU执行完成
+		}
 		DXContext::Get().Shutdown(); //释放D3D12核心对象
 	}
 	else
