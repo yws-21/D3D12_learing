@@ -2,21 +2,21 @@
 
 bool DXWindow::Init()
 {
-    // Window class
+    // Window class 窗口类描述结构
     WNDCLASSEXW wcex{};
-    wcex.cbSize = sizeof(wcex);
-    wcex.style = CS_OWNDC;
-    wcex.lpfnWndProc = &DXWindow::OnWindowMessage;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = GetModuleHandleW(nullptr);
-    wcex.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-    wcex.hbrBackground = nullptr;
-    wcex.lpszMenuName = nullptr;
-    wcex.lpszClassName = L"D3D12ExWndCls";
-    wcex.hIconSm = LoadIconW(nullptr, IDI_APPLICATION);
-    m_wndClass = RegisterClassExW(&wcex);
+    wcex.cbSize = sizeof(wcex); //结构的大小
+	wcex.style = CS_OWNDC; //窗口样式：用一组位标识符来指定窗口的样式，CS_OWNDC表示为每个窗口分配一个私有的设备上下文
+    wcex.lpfnWndProc = &DXWindow::OnWindowMessage;//
+    wcex.cbClsExtra = 0;//
+    wcex.cbWndExtra = 0;//
+    wcex.hInstance = GetModuleHandleW(nullptr);//
+    wcex.hIcon = LoadIconW(nullptr, IDI_APPLICATION);//
+    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);//
+    wcex.hbrBackground = nullptr;//
+    wcex.lpszMenuName = nullptr;//
+    wcex.lpszClassName = L"D3D12ExWndCls";//
+    wcex.hIconSm = LoadIconW(nullptr, IDI_APPLICATION);//
+    m_wndClass = RegisterClassExW(&wcex);//
     if (m_wndClass == 0)
     {
         return false;

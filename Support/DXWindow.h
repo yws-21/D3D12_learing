@@ -72,7 +72,7 @@ private:
     ComPointer<ID3D12DescriptorHeap> m_rtvDescHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FrameCount];
 
-    // singleton
+	// 单例类(Singelton) 只能有一个实例，禁止拷贝和赋值   
 public:
     DXWindow(const DXWindow&) = delete;
     DXWindow& operator=(const DXWindow&) = delete;
