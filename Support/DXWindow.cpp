@@ -6,17 +6,18 @@ bool DXWindow::Init()
     WNDCLASSEXW wcex{};
     wcex.cbSize = sizeof(wcex); //结构的大小
 	wcex.style = CS_OWNDC; //窗口样式：用一组位标识符来指定窗口的样式，CS_OWNDC表示为每个窗口分配一个私有的设备上下文
-    wcex.lpfnWndProc = &DXWindow::OnWindowMessage;//
+    wcex.lpfnWndProc = &DXWindow::OnWindowMessage;//注册窗口过程
     wcex.cbClsExtra = 0;//
-    wcex.cbWndExtra = 0;//
-    wcex.hInstance = GetModuleHandleW(nullptr);//
-    wcex.hIcon = LoadIconW(nullptr, IDI_APPLICATION);//
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);//
-    wcex.hbrBackground = nullptr;//
-    wcex.lpszMenuName = nullptr;//
-    wcex.lpszClassName = L"D3D12ExWndCls";//
-    wcex.hIconSm = LoadIconW(nullptr, IDI_APPLICATION);//
-    m_wndClass = RegisterClassExW(&wcex);//
+    wcex.cbWndExtra = 0;//额外预留
+	wcex.hInstance = GetModuleHandleW(nullptr);//注册这个窗口类的应用程序实例 传回句柄
+	wcex.hIcon = LoadIconW(nullptr, IDI_APPLICATION);//指定图标：（指定图标资源所在的模块实例句柄，IDI_APPLICATION表示使用默认应用程序图标）
+    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);//鼠标指针：类似同上
+    wcex.hbrBackground = nullptr;//背景画刷：定义背景颜色
+    wcex.lpszMenuName = nullptr;//菜单名称（暂不需要
+    wcex.lpszClassName = L"D3D12ExWndCls";//指定窗口类名
+    wcex.hIconSm = LoadIconW(nullptr, IDI_APPLICATION);//小图标
+   
+    m_wndClass = RegisterClassExW(&wcex);//注册函数
     if (m_wndClass == 0)
     {
         return false;
@@ -133,7 +134,7 @@ void DXWindow::Shutdown()
         DestroyWindow(m_window);
     }
 
-    if (m_wndClass)
+    if (m_wndClass)//注销窗口
     {
         UnregisterClassW((LPCWSTR)m_wndClass, GetModuleHandleW(nullptr));
     }
@@ -256,24 +257,25 @@ void DXWindow::ReleaseBuffers()
 }
 
 LRESULT CALLBACK DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+// 回调函数：负责处理窗口消息：窗口句柄/消息编号/消息（附加）参数1/消息参数2（有信息的时候回调窗口过程）
 {
     switch (msg)
     {
     case WM_KEYDOWN:
-        if (wParam == VK_F11)
+        if (wParam == VK_F11)//按F11
         {
-            Get().SetFullscreen(!Get().IsFullscreen());
+            Get().SetFullscreen(!Get().IsFullscreen()); //切换全屏
         }
         break;
-    case WM_SIZE:
+    case WM_SIZE://窗口尺寸变化
         if (lParam && (HIWORD(lParam) != Get().m_height || LOWORD(lParam) != Get().m_width))
         {
             Get().m_shouldResize = true;
         }
         break;
-    case WM_CLOSE:
+    case WM_CLOSE://关闭请求
         Get().m_shouldClose = true;
         return 0;
     }
-    return DefWindowProcW(wnd, msg, wParam, lParam);
+    return DefWindowProcW(wnd, msg, wParam, lParam);//默认处理
 }

@@ -28,7 +28,8 @@ int main()
 	}
 	else
 	{
-		
+
 	}
 
 	DXDebugLayer::Get().Shutdown();
+}

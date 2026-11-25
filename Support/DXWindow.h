@@ -53,6 +53,7 @@ private:
     void ReleaseBuffers();
 
     static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	//负责处理窗口消息：窗口句柄/消息编号/消息（附加）参数1/消息参数2
 
 private:
     ATOM m_wndClass = 0;

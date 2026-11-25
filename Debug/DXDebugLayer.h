@@ -5,7 +5,7 @@
 
 
 class DXDebugLayer
-{
+ {
 public:
 	bool Init();
 	void Shutdown();
