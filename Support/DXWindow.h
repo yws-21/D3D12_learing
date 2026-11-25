@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <Support/WinInclude.h>
 #include <Support/ComPointer.h>
@@ -53,7 +53,7 @@ private:
     void ReleaseBuffers();
 
     static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	//¸ºÔğ´¦Àí´°¿ÚÏûÏ¢£º´°¿Ú¾ä±ú/ÏûÏ¢±àºÅ/ÏûÏ¢£¨¸½¼Ó£©²ÎÊı1/ÏûÏ¢²ÎÊı2
+	//è´Ÿè´£å¤„ç†çª—å£æ¶ˆæ¯ï¼šçª—å£å¥æŸ„/æ¶ˆæ¯ç¼–å·/æ¶ˆæ¯ï¼ˆé™„åŠ ï¼‰å‚æ•°1/æ¶ˆæ¯å‚æ•°2
 
 private:
     ATOM m_wndClass = 0;
@@ -73,7 +73,7 @@ private:
     ComPointer<ID3D12DescriptorHeap> m_rtvDescHeap;
     D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FrameCount];
 
-	// µ¥ÀıÀà(Singelton) Ö»ÄÜÓĞÒ»¸öÊµÀı£¬½ûÖ¹¿½±´ºÍ¸³Öµ   
+	// å•ä¾‹ç±»(Singelton) åªèƒ½æœ‰ä¸€ä¸ªå®ä¾‹ï¼Œç¦æ­¢æ‹·è´å’Œèµ‹å€¼   
 public:
     DXWindow(const DXWindow&) = delete;
     DXWindow& operator=(const DXWindow&) = delete;

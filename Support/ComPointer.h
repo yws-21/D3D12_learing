@@ -142,7 +142,4 @@ private:
 
 private:
 	CT* m_pointer = nullptr;
-}; ​
-
-
-​
+};

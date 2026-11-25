@@ -1,8 +1,9 @@
-#pragma once
+ï»¿#pragma once
 
-#define NOMINMAX//±ÜÃâÊ¹ÓÃWindows.hÄÚµÄMinºÍMaxºê£¬±ÜÃâºÍStd³åÍ»µ¼ÖÂ±àÒë´íÎó
+#define NOMINMAX//é¿å…ä½¿ç”¨Windows.hå†…çš„Minå’ŒMaxå®ï¼Œé¿å…å’ŒStdå†²çªå¯¼è‡´ç¼–è¯‘é”™è¯¯
 
 #include <Windows.h>
+
 #include <d3d12.h>
 #include<dxgi1_6.h>
 
@@ -10,4 +11,6 @@
 #include <dxgidebug.h>
 #include <d3d12sdklayers.h>
 #endif
-//²âÊÔ
+
+
+#include <wincodec.h>

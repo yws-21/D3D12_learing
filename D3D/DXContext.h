@@ -1,10 +1,11 @@
-#pragma once
+ï»¿#pragma once
 
 #include<Support/WinInclude.h>
 #include<Support/ComPointer.h>
+#include <cstdlib>
 
-//¸ºÔğ¹ÜÀíDirectX 12µÄÉè±¸¡¢ÃüÁî¶ÓÁĞ¡¢ÃüÁî·ÖÅäÆ÷¡¢ÃüÁîÁĞ±íºÍÍ¬²½»úÖÆ£¨Î§À¸ºÍÊÂ¼ş£©¡£
-// Ìá¹©ÁË³õÊ¼»¯ºÍ¹Ø±Õ DirectX 12 ÉÏÏÂÎÄµÄ¹¦ÄÜ£¬²¢ÔÊĞíÓÃ»§»ñÈ¡Éè±¸ºÍÃüÁî¶ÓÁĞµÄÒıÓÃ¡£¸ÃÀà»¹ÊµÏÖÁËµ¥ÀıÄ£Ê½£¬È·±£ÔÚÕû¸öÓ¦ÓÃ³ÌĞòÖĞÖ»ÓĞÒ»¸ö DXContext ÊµÀı¡£
+//è´Ÿè´£ç®¡ç†DirectX 12çš„è®¾å¤‡ã€å‘½ä»¤é˜Ÿåˆ—ã€å‘½ä»¤åˆ†é…å™¨ã€å‘½ä»¤åˆ—è¡¨å’ŒåŒæ­¥æœºåˆ¶ï¼ˆå›´æ å’Œäº‹ä»¶ï¼‰ã€‚
+// æä¾›äº†åˆå§‹åŒ–å’Œå…³é—­ DirectX 12 ä¸Šä¸‹æ–‡çš„åŠŸèƒ½ï¼Œå¹¶å…è®¸ç”¨æˆ·è·å–è®¾å¤‡å’Œå‘½ä»¤é˜Ÿåˆ—çš„å¼•ç”¨ã€‚è¯¥ç±»è¿˜å®ç°äº†å•ä¾‹æ¨¡å¼ï¼Œç¡®ä¿åœ¨æ•´ä¸ªåº”ç”¨ç¨‹åºä¸­åªæœ‰ä¸€ä¸ª DXContext å®ä¾‹ã€‚
 
 class DXContext
 {
@@ -12,50 +13,62 @@ public:
 	bool Init();
 	void Shutdown();
 
-	void SignalAndWait();//Í¬²½»úÖÆ£¬µÈ´ıĞÅºÅ
+	void SignalAndWait();//åŒæ­¥æœºåˆ¶ï¼Œç­‰å¾…ä¿¡å·
  
-	ID3D12GraphicsCommandList7* InitCommandList();//³õÊ¼»¯ÃüÁîÁĞ±í ²¢·µ»ØÃüÁîÁĞ±íÖ¸Õë¸øÍâ²¿Ê¹ÓÃ
-	void ExecuteCommandList(); //Ìá½»Ö´ĞĞ²¢µÈ´ı
+	ID3D12GraphicsCommandList7* InitCommandList();//åˆå§‹åŒ–å‘½ä»¤åˆ—è¡¨ å¹¶è¿”å›å‘½ä»¤åˆ—è¡¨æŒ‡é’ˆç»™å¤–éƒ¨ä½¿ç”¨
+	void ExecuteCommandList(); //æäº¤æ‰§è¡Œå¹¶ç­‰å¾…
 
-	inline ComPointer<ID3D12Device10>& GetDevice() //ÈÃÍâ²¿Éè±¸»ñÈ¡m_device
+	inline void Flush(size_t count)
+	{
+		for (size_t i = 0; i < count; i++)
+			SignalAndWait();
+	}
+
+	inline ComPointer<IDXGIFactory7>& GetFactory()
+	{
+		return m_dxgiFactory;
+	}
+
+	inline ComPointer<ID3D12Device10>& GetDevice() //è®©å¤–éƒ¨è®¾å¤‡è·å–m_device
 	{
 		return m_device;
 	}
 
-	inline ComPointer<ID3D12CommandQueue>& GetCommandQueue() //ÈÃÍâ²¿Éè±¸»ñÈ¡m_cmdQueue
-	{
+	inline ComPointer<ID3D12CommandQueue>& GetCommandQueue() //è®©å¤–éƒ¨è®¾å¤‡è·å–m_cmdQueue
 	{
 		return m_cmdQueue;
 	}
 
 private:
-	ComPointer<ID3D12Device10> m_device; //Éè±¸
-	ComPointer<ID3D12CommandQueue> m_cmdQueue; //ÃüÁî¶ÓÁĞ
+	ComPointer<IDXGIFactory7> m_dxgiFactory;
 
-	ComPointer<ID3D12CommandAllocator> m_cmdAllocator; //ÃüÁî·ÖÅäÆ÷£¨¸ºÔğ´æ´¢£©£¬ÊµÖÊÉÏÊÇÒ»¿éÄÚ´æÇøÓò£¬ÊÇÎªÃüÁîÁĞ±íÌá¹©µÄËùÓĞÃüÁîÌá¹©ÄÚ´æÖ§³Ö¡£
-	ComPointer<ID3D12GraphicsCommandList7> m_cmdList; //ÃüÁîÁĞ±í(	¸ºÔğÂ¼ÖÆGPUÃüÁî£¬Ìá½»¸øÃüÁî¶ÓÁĞÖ´ĞĞ)
+	ComPointer<ID3D12Device10> m_device; //è®¾å¤‡
+	ComPointer<ID3D12CommandQueue> m_cmdQueue; //å‘½ä»¤é˜Ÿåˆ—
 
-	ComPointer<ID3D12Fence1> m_fence; // Î§À¸¶ÔÏó£¨Fence£©
-	// Ò»¸ö¿É±» CPU ºÍ GPU ¹²Í¬¶ÁĞ´µÄ¼ÆÊıÆ÷
-	// GPU Ö´ĞĞµ½ Signal Ö¸ÁîÊ±£¬»á½«Î§À¸Öµ¸üĞÂÎªÖ¸¶¨Öµ
+	ComPointer<ID3D12CommandAllocator> m_cmdAllocator; //å‘½ä»¤åˆ†é…å™¨ï¼ˆè´Ÿè´£å­˜å‚¨ï¼‰ï¼Œå®è´¨ä¸Šæ˜¯ä¸€å—å†…å­˜åŒºåŸŸï¼Œæ˜¯ä¸ºå‘½ä»¤åˆ—è¡¨æä¾›çš„æ‰€æœ‰å‘½ä»¤æä¾›å†…å­˜æ”¯æŒã€‚
+	ComPointer<ID3D12GraphicsCommandList7> m_cmdList; //å‘½ä»¤åˆ—è¡¨(	è´Ÿè´£å½•åˆ¶GPUå‘½ä»¤ï¼Œæäº¤ç»™å‘½ä»¤é˜Ÿåˆ—æ‰§è¡Œ)
 
-	UINT64 m_fenceValue = 0; // Î§À¸Öµ£¨µ¥µ÷µİÔö£©
-    // CPU ¶ËÎ¬»¤µÄ¼ÆÊıÆ÷£¬Ã¿´ÎÍ¬²½Ê±µİÔö
-	// Í¨¹ı±È½Ï GPU µ±Ç°Î§À¸ÖµÓë´ËÖµ£¬ÅĞ¶ÏGPU ÊÇ·ñÍê³ÉÁË CPU Ìá½»µÄÃüÁî
+	ComPointer<ID3D12Fence1> m_fence; // å›´æ å¯¹è±¡ï¼ˆFenceï¼‰
+	// ä¸€ä¸ªå¯è¢« CPU å’Œ GPU å…±åŒè¯»å†™çš„è®¡æ•°å™¨
+	// GPU æ‰§è¡Œåˆ° Signal æŒ‡ä»¤æ—¶ï¼Œä¼šå°†å›´æ å€¼æ›´æ–°ä¸ºæŒ‡å®šå€¼
 
-	HANDLE m_fenceEvent = nullptr; // Î§À¸ÊÂ¼ş¾ä±ú£¨Windows ÄÚºËÊÂ¼ş¶ÔÏó£©|||  handleÊÇÒ»ÖÖ³£ÓÃ¾ä±úÀàĞÍ
-    // µ± GPU Íê³ÉÃüÁî²¢¸üĞÂÎ§À¸Öµºó£¬´¥·¢´ËÊÂ¼ş
-    // CPU µ÷ÓÃ WaitForSingleObject() ×èÈûÔÚ´Ë£¬±»»½ĞÑºó¼ÌĞøÖ´ĞĞ
-    // ±ÜÃâÁË CPU Ã¦µÈ´ı£¨busy-wait£©ÀË·Ñ×ÊÔ´
+	UINT64 m_fenceValue = 0; // å›´æ å€¼ï¼ˆå•è°ƒé€’å¢ï¼‰
+    // CPU ç«¯ç»´æŠ¤çš„è®¡æ•°å™¨ï¼Œæ¯æ¬¡åŒæ­¥æ—¶é€’å¢
+	// é€šè¿‡æ¯”è¾ƒ GPU å½“å‰å›´æ å€¼ä¸æ­¤å€¼ï¼Œåˆ¤æ–­GPU æ˜¯å¦å®Œæˆäº† CPU æäº¤çš„å‘½ä»¤
+
+	HANDLE m_fenceEvent = nullptr; // å›´æ äº‹ä»¶å¥æŸ„ï¼ˆWindows å†…æ ¸äº‹ä»¶å¯¹è±¡ï¼‰|||  handleæ˜¯ä¸€ç§å¸¸ç”¨å¥æŸ„ç±»å‹
+    // å½“ GPU å®Œæˆå‘½ä»¤å¹¶æ›´æ–°å›´æ å€¼åï¼Œè§¦å‘æ­¤äº‹ä»¶
+    // CPU è°ƒç”¨ WaitForSingleObject() é˜»å¡åœ¨æ­¤ï¼Œè¢«å”¤é†’åç»§ç»­æ‰§è¡Œ
+    // é¿å…äº† CPU å¿™ç­‰å¾…ï¼ˆbusy-waitï¼‰æµªè´¹èµ„æº
 
 
 
-	//µ¥ÀıÀà(Singelton) 
+	//å•ä¾‹ç±»(Singelton) 
 public:
 	DXContext(const DXContext&) = delete;
 	DXContext& operator = (const DXContext&) = delete;
 
-	inline static DXContext& Get()  B
+	inline static DXContext& Get()
 	{
 		static DXContext instance;
 		return instance;

@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 
 #include <Support/WinInclude.h>
 #include <Support/ComPointer.h>
@@ -10,21 +10,21 @@
 
 int main()
 {
-	DXDebugLayer::Get().Init(); //µ÷ÊÔ²ã³õÊ¼»¯
-	if (DXContext)::Get().Init()) //³õÊ¼»¯D3D12ºËÐÄ¶ÔÏó
+	DXDebugLayer::Get().Init(); //è°ƒè¯•å±‚åˆå§‹åŒ–
+	if (DXContext::Get().Init()) //åˆå§‹åŒ–D3D12æ ¸å¿ƒå¯¹è±¡
 	{
 		while (true)
 		{
-			auto* cmdList = DXContext::Get().InitCommandList(); //³õÊ¼»¯ÃüÁîÁÐ±í
+			auto* cmdList = DXContext::Get().InitCommandList(); //åˆå§‹åŒ–å‘½ä»¤åˆ—è¡¨
 
-			//ÏÈÍê³ÉÉèÖÃ-->ÔÙ»æÖÆ
+			//å…ˆå®Œæˆè®¾ç½®-->å†ç»˜åˆ¶
 
 
 
-			DXContext::Get().ExecuteCommandList(); //Ìá½»ÃüÁîÁÐ±í²¢µÈ´ýGPUÖ´ÐÐÍê³É
-			//-->ÏÔÊ¾½á¹û
+			DXContext::Get().ExecuteCommandList(); //æäº¤å‘½ä»¤åˆ—è¡¨å¹¶ç­‰å¾…GPUæ‰§è¡Œå®Œæˆ
+			//-->æ˜¾ç¤ºç»“æžœ
 		}
-		DXContext::Get().Shutdown(); //ÊÍ·ÅD3D12ºËÐÄ¶ÔÏó
+		DXContext::Get().Shutdown(); //é‡Šæ”¾D3D12æ ¸å¿ƒå¯¹è±¡
 	}
 	else
 	{

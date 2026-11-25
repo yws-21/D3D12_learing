@@ -1,23 +1,23 @@
-#include "Window.h"
+﻿#include "DXWindow.h"
 
 bool DXWindow::Init()
 {
-    // Window class �����������ṹ
+    // Window class 窗口类描述结构
     WNDCLASSEXW wcex{};
-    wcex.cbSize = sizeof(wcex); //�ṹ�Ĵ�С
-	wcex.style = CS_OWNDC; //������ʽ����һ��λ��ʶ����ָ�����ڵ���ʽ��CS_OWNDC��ʾΪÿ�����ڷ���һ��˽�е��豸������
-    wcex.lpfnWndProc = &DXWindow::OnWindowMessage;//ע�ᴰ�ڹ���
+    wcex.cbSize = sizeof(wcex); //结构的大小
+	wcex.style = CS_OWNDC; //窗口样式：用一组位标识符来指定窗口的样式，CS_OWNDC表示为每个窗口分配一个私有的设备上下文
+    wcex.lpfnWndProc = &DXWindow::OnWindowMessage;//注册窗口过程
     wcex.cbClsExtra = 0;//
-    wcex.cbWndExtra = 0;//����Ԥ��
-	wcex.hInstance = GetModuleHandleW(nullptr);//ע������������Ӧ�ó���ʵ�� ���ؾ��
-	wcex.hIcon = LoadIconW(nullptr, IDI_APPLICATION);//ָ��ͼ�꣺��ָ��ͼ����Դ���ڵ�ģ��ʵ�������IDI_APPLICATION��ʾʹ��Ĭ��Ӧ�ó���ͼ�꣩
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);//���ָ�룺����ͬ��
-    wcex.hbrBackground = nullptr;//������ˢ�����屳����ɫ
-    wcex.lpszMenuName = nullptr;//�˵����ƣ��ݲ���Ҫ
-    wcex.lpszClassName = L"D3D12ExWndCls";//ָ����������
-    wcex.hIconSm = LoadIconW(nullptr, IDI_APPLICATION);//Сͼ��
+    wcex.cbWndExtra = 0;//额外预留
+	wcex.hInstance = GetModuleHandleW(nullptr);//注册这个窗口类的应用程序实例 传回句柄
+	wcex.hIcon = LoadIconW(nullptr, IDI_APPLICATION);//指定图标：（指定图标资源所在的模块实例句柄，IDI_APPLICATION表示使用默认应用程序图标）
+    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);//鼠标指针：类似同上
+    wcex.hbrBackground = nullptr;//背景画刷：定义背景颜色
+    wcex.lpszMenuName = nullptr;//菜单名称（暂不需要
+    wcex.lpszClassName = L"D3D12ExWndCls";//指定窗口类名
+    wcex.hIconSm = LoadIconW(nullptr, IDI_APPLICATION);//小图标
    
-    m_wndClass = RegisterClassExW(&wcex);//ע�ắ��
+    m_wndClass = RegisterClassExW(&wcex);//注册函数
     if (m_wndClass == 0)
     {
         return false;
@@ -32,19 +32,20 @@ bool DXWindow::Init()
     GetMonitorInfoW(monitor, &monitorInfo);
 
     // Window
-    m_window = CreateWindowExW(
-        WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
-        (LPCWSTR)m_wndClass,
-        L"D3D12Ez",
-        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-        monitorInfo.rcWork.left + 100,
-        monitorInfo.rcWork.top + 100,
-        1920,
+    m_window = CreateWindowExW(    //创造实际窗口
+		WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
+        //扩展（额外）窗口样式：WS_EX_OVERLAPPEDWINDOW表示创建一个重叠窗口，WS_EX_APPWINDOW表示创建一个应用程序窗口
+        (LPCWSTR)m_wndClass, //指定窗口类
+        L"D3D12Ez",//名字
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE, //窗口样式：WS_OVERLAPPEDWINDOW也表示创建一个重叠窗口，WS_VISIBLE表示窗口直接可见
+		monitorInfo.rcWork.left + 100,   //窗口位置：坐标
+		monitorInfo.rcWork.top + 100, //同上
+        1920,//大小尺寸
         1080,
-        nullptr,
-        nullptr,
-        wcex.hInstance,
-        nullptr
+		nullptr,//父窗口句柄，若为顶级窗口则为NULL
+        nullptr,//菜单句柄
+        wcex.hInstance,//模块实例句柄
+        nullptr//用户自定义参数
     );
     if (m_window == nullptr)
         return false;
@@ -53,7 +54,7 @@ bool DXWindow::Init()
     DXGI_SWAP_CHAIN_DESC1 swd{};
     DXGI_SWAP_CHAIN_FULLSCREEN_DESC sfd{};
 
-    swd.Width = 1920;
+    swd.Width = 1920;  
     swd.Height = 1080;
     swd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swd.Stereo = false;
@@ -134,7 +135,7 @@ void DXWindow::Shutdown()
         DestroyWindow(m_window);
     }
 
-    if (m_wndClass)//ע������
+    if (m_wndClass)//注销窗口
     {
         UnregisterClassW((LPCWSTR)m_wndClass, GetModuleHandleW(nullptr));
     }
@@ -257,25 +258,25 @@ void DXWindow::ReleaseBuffers()
 }
 
 LRESULT CALLBACK DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
-// �ص�������������������Ϣ�����ھ��/��Ϣ���/��Ϣ�����ӣ�����1/��Ϣ����2������Ϣ��ʱ��ص����ڹ��̣�
+// 回调函数：负责处理窗口消息：窗口句柄/消息编号/消息（附加）参数1/消息参数2（有信息的时候回调窗口过程）
 {
     switch (msg)
     {
     case WM_KEYDOWN:
-        if (wParam == VK_F11)//��F11
+        if (wParam == VK_F11)//按F11
         {
-            Get().SetFullscreen(!Get().IsFullscreen()); //�л�ȫ��
+            Get().SetFullscreen(!Get().IsFullscreen()); //切换全屏
         }
         break;
-    case WM_SIZE://���ڳߴ�仯
+    case WM_SIZE://窗口尺寸变化
         if (lParam && (HIWORD(lParam) != Get().m_height || LOWORD(lParam) != Get().m_width))
         {
             Get().m_shouldResize = true;
         }
         break;
-    case WM_CLOSE://�ر�����
+    case WM_CLOSE://关闭请求
         Get().m_shouldClose = true;
         return 0;
     }
-    return DefWindowProcW(wnd, msg, wParam, lParam);//Ĭ�ϴ���
+    return DefWindowProcW(wnd, msg, wParam, lParam);//默认处理
 }

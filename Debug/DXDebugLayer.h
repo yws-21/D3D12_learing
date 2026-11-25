@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 
 #include<Support/WinInclude.h>
 #include<Support/ComPointer.h>
 
 
 class DXDebugLayer
- {
+{
 public:
 	bool Init();
 	void Shutdown();
@@ -15,10 +15,10 @@ private:
 #ifdef _DEBUG
 	ComPointer<ID3D12Debug6> m_d3d12Debug;
 	ComPointer<IDXGIDebug1> m_dxgiDebug;
-#endif // Ö»ÄÜÔÚ_DEBUGÏÂÊ¹ÓÃDebugLayer
+#endif // åªèƒ½åœ¨_DEBUGä¸‹ä½¿ç”¨DebugLayer
 
 
-	//µ¥ÀıÀà(Singelton) Ö»ÄÜÓĞÒ»¸öÊµÀı£¬½ûÖ¹¿½±´ºÍ¸³Öµ
+	//å•ä¾‹ç±»(Singelton) åªèƒ½æœ‰ä¸€ä¸ªå®ä¾‹ï¼Œç¦æ­¢æ‹·è´å’Œèµ‹å€¼
 public:
 	DXDebugLayer(const DXDebugLayer&) = delete;
 	DXDebugLayer& operator = (const DXDebugLayer&) = delete;

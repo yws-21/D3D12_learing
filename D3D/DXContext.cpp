@@ -1,132 +1,137 @@
-#include "DXContext.h"
+ï»¿#include "DXContext.h"
 
 /*
 *   GPU (DEVICE)
 *   <----->
-*   Command Queue (WorkSet ,WorkSet,Sync) ÃüÁî¶ÓÁĞ£¨Í¬²½»úÖÆ£©
+*   Command Queue (WorkSet ,WorkSet,Sync) å‘½ä»¤é˜Ÿåˆ—ï¼ˆåŒæ­¥æœºåˆ¶ï¼‰
 *   <--
-*   CPU WorkSet (Setup,Setup,ChangeState,Setup,Draw) ==ComandList ÃüÁîÁĞ±í
+*   CPU WorkSet (Setup,Setup,ChangeState,Setup,Draw) ==ComandList å‘½ä»¤åˆ—è¡¨
 */
 
-bool DXContext::Init() //³õÊ¼»¯ËùÓĞD3D12ºËĞÄ¶ÔÏó£¬°üÀ¨Éè±¸¡¢ÃüÁî¶ÓÁĞ¡¢Î§À¸¡¢ÊÂ¼ş¡¢ÃüÁî·ÖÅäÆ÷ºÍÃüÁîÁĞ±í
+bool DXContext::Init() //åˆå§‹åŒ–æ‰€æœ‰D3D12æ ¸å¿ƒå¯¹è±¡ï¼ŒåŒ…æ‹¬è®¾å¤‡ã€å‘½ä»¤é˜Ÿåˆ—ã€å›´æ ã€äº‹ä»¶ã€å‘½ä»¤åˆ†é…å™¨å’Œå‘½ä»¤åˆ—è¡¨
 {
-    //(¼ì²éÊÇ·ñ)´´½¨Éè±¸
-    if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device))))
+    if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))))
     {
-        //ÃüÁî¶ÓÁĞÃèÊö½á¹¹
-        D3D12_ COMMAND_QUEUE_FESC cmdQUEUEDesc{};
-		cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //Type:ÄÜÌá½»ºÍÖ´ĞĞµÄÃüÁîÁĞ±íÀàĞÍ
-		cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; //Priority:ÃüÁî¶ÓÁĞµÄÓÅÏÈ¼¶
-		cmdQueueDesc.NodeMask = 0; //NodeMask:Ö¸¶¨ÃüÁî¶ÓÁĞ½«ÔÚÄÄ¸öGPU½ÚµãÉÏÖ´ĞĞ£¬0±íÊ¾Ä¬ÈÏ½Úµã
-        cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; //Flags:ÃüÁî¶ÓÁĞµÄ±êÖ¾
-
-    //¼ì²é´´½¨½á¹û:
-
-    //ÃüÁîÁĞ±í
-    if (FAILED(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue))))
-    {  
         return false;
     }
-   
-    //Î§À¸
+    //(æ£€æŸ¥æ˜¯å¦)åˆ›å»ºè®¾å¤‡
+    if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device))))
+    {
+		return false;
+    }
+    //å‘½ä»¤é˜Ÿåˆ—æè¿°ç»“æ„
+    D3D12_COMMAND_QUEUE_DESC cmdQueueDesc{};
+    cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //Type:èƒ½æäº¤å’Œæ‰§è¡Œçš„å‘½ä»¤åˆ—è¡¨ç±»å‹
+    cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; //Priority:å‘½ä»¤é˜Ÿåˆ—çš„ä¼˜å…ˆçº§
+    cmdQueueDesc.NodeMask = 0; //NodeMask:æŒ‡å®šå‘½ä»¤é˜Ÿåˆ—å°†åœ¨å“ªä¸ªGPUèŠ‚ç‚¹ä¸Šæ‰§è¡Œï¼Œ0è¡¨ç¤ºé»˜è®¤èŠ‚ç‚¹
+    cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; //Flags:å‘½ä»¤é˜Ÿåˆ—çš„æ ‡å¿—
+
+    //æ£€æŸ¥åˆ›å»ºç»“æœ:
+
+    //å‘½ä»¤åˆ—è¡¨
+    if (FAILED(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue))))
+    {
+        return false;
+    }
+
+    //å›´æ 
     if (FAILED(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence))))
     {
-		return false;
+        return false;
     }
 
-    //´´½¨Ò»¸öÊÂ¼ş¶ÔÏó£¬·µ»ØÒ»¸ö¾ä±ú¡£²ÎÊı·Ö±ğÎª£º°²È«ÊôĞÔ¡¢ÊÖ¶¯ÖØÖÃ²ÎÊı¡¢³õÊ¼×´Ì¬¡¢ÊÂ¼şÃû³Æ
+    //åˆ›å»ºä¸€ä¸ªäº‹ä»¶å¯¹è±¡ï¼Œè¿”å›ä¸€ä¸ªå¥æŸ„ã€‚å‚æ•°åˆ†åˆ«ä¸ºï¼šå®‰å…¨å±æ€§ã€æ‰‹åŠ¨é‡ç½®å‚æ•°ã€åˆå§‹çŠ¶æ€ã€äº‹ä»¶åç§°
     m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-    if ( m_fenceEvent != nullptr)
+    if (m_fenceEvent != nullptr)
     {
-		return false;
+        return false;
     }
 
-    //ÃüÁî·ÖÅäÆ÷
+    //å‘½ä»¤åˆ†é…å™¨
     if (FAILED(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator))))
     {
         return false;
     }
 
-    //ÃüÁîÁĞ±í
+    //å‘½ä»¤åˆ—è¡¨
     if (FAILED(m_device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&m_cmdList))))
     {
         return false;
     }
 
-    return true;//Ä¬ÈÏ·µ»Ø
-
+    return true;//é»˜è®¤è¿”å›    
 }
-void DXContext::Shutdown()//×ÊÔ´ÊÍ·Å
+void DXContext::Shutdown()//èµ„æºé‡Šæ”¾
 {
     m_cmdAllocator.Release();
     m_cmdList.Release();
 
     if (m_fenceEvent)
     {
-        CloseHandle(m_fenceEvent);//¹Ø±ÕÊÂ¼ş¾ä±ú
+        CloseHandle(m_fenceEvent);//å…³é—­äº‹ä»¶å¥æŸ„
     }
 
     m_cmdQueue.Release();
     m_device.Release();
 }
 
-void DXContext::SignalAndWait() //Í¬²½»úÖÆ
+void DXContext::SignalAndWait() //åŒæ­¥æœºåˆ¶
 {
-    m_fenceValue++;//µİÔöÄ¿±êÖµ 
-    m_cmdQueue->Signal(m_fence, m_fenceValue); // GPU Ö´ĞĞµ½´Ë´¦Ê±¸üĞÂÎ§À¸
+    m_fenceValue++;//é€’å¢ç›®æ ‡å€¼ 
+    m_cmdQueue->Signal(m_fence, m_fenceValue); // GPU æ‰§è¡Œåˆ°æ­¤å¤„æ—¶æ›´æ–°å›´æ 
 
-   /* while (m_fence->GetCompletedValue() < m_fenceValue) //¼ì²éGPUÊÇ·ñÍê³ÉÁËCPUÌá½»µÄÃüÁî
+   /* while (m_fence->GetCompletedValue() < m_fenceValue) //æ£€æŸ¥GPUæ˜¯å¦å®Œæˆäº†CPUæäº¤çš„å‘½ä»¤
     *{
-	*	SwitchToThread(); //Èç¹ûÃ»ÓĞÍê³É£¬ÔòÈÃ³öCPUÊ±¼äÆ¬£¬±ÜÃâÃ¦µÈ´ı
+	*	SwitchToThread(); //å¦‚æœæ²¡æœ‰å®Œæˆï¼Œåˆ™è®©å‡ºCPUæ—¶é—´ç‰‡ï¼Œé¿å…å¿™ç­‰å¾…
     *} 
-    *ÕâÊÇÂÖÑ¯Ò»Ö±ÎÊ£¬Ğ§ÂÊµÍ£¬ËùÒÔ¼ÓÁËÏÂÃæµÄ×èÈû
+    *è¿™æ˜¯è½®è¯¢ä¸€ç›´é—®ï¼Œæ•ˆç‡ä½ï¼Œæ‰€ä»¥åŠ äº†ä¸‹é¢çš„é˜»å¡
     */
 
-    /*CPUÏß³Ì                           GPU
+    /*CPUçº¿ç¨‹                           GPU
         |                                |
-        |--Ìá½»ÃüÁîµ½ÃüÁî¶ÓÁĞ----------->|
-        |                                |--Ö´ĞĞGPUÃüÁî
-        | --SetEventOnCompletion-------- | (×¢²á:µ±Î§À¸µ½´ïm_fenceValueÊ±£¬
-            | (×¢²á»Øµ÷ / ÊÂ¼ş) | ´¥·¢m_fenceEvent)
+        |--æäº¤å‘½ä»¤åˆ°å‘½ä»¤é˜Ÿåˆ—----------->|
+        |                                |--æ‰§è¡ŒGPUå‘½ä»¤
+        | --SetEventOnCompletion-------- | (æ³¨å†Œ:å½“å›´æ åˆ°è¾¾m_fenceValueæ—¶ï¼Œ
+            | (æ³¨å†Œå›è°ƒ / äº‹ä»¶) | è§¦å‘m_fenceEvent)
         |                                |
-        |--WaitForSingleObject-------- - | ¡û CPUÏß³ÌÔÚ´Ë±»OS¹ÒÆğ
-        | (¹ÒÆğ£¬×î¶à20s) | ²»Õ¼ÓÃCPUÖ´ĞĞÊ±¼ä
+        |--WaitForSingleObject-------- - | â† CPUçº¿ç¨‹åœ¨æ­¤è¢«OSæŒ‚èµ·
+        | (æŒ‚èµ·ï¼Œæœ€å¤š20s) | ä¸å ç”¨CPUæ‰§è¡Œæ—¶é—´
         |                                |
-        |                                |--GPUÃüÁîÖ´ĞĞÍê±Ï
-        |                                |--Î§À¸Öµ´ïµ½m_fenceValue
-        |                                |--´¥·¢m_fenceEvent
+        |                                |--GPUå‘½ä»¤æ‰§è¡Œå®Œæ¯•
+        |                                |--å›´æ å€¼è¾¾åˆ°m_fenceValue
+        |                                |--è§¦å‘m_fenceEvent
         |                                |
-        | < --WAIT_OBJECT_0-------------- | ¡û OS»½ĞÑCPUÏß³Ì£¬¼ÌĞøÖ´ĞĞ
+        | < --WAIT_OBJECT_0-------------- | â† OSå”¤é†’CPUçº¿ç¨‹ï¼Œç»§ç»­æ‰§è¡Œ
      */
 
-	//WaitForSingleObject¸æÖª²Ù×÷ÏµÍ³£¬CPUÏß³ÌĞèÒªµÈ´ıÒ»¸öÊÂ¼ş¶ÔÏóµÄ×´Ì¬±äÎªÓĞĞÅºÅ×´Ì¬£¨Í¨¹ıÆäËûÏß³Ì¼¤»î£©£¬»òÕßµÈ´ı³¬Ê±¡£²Ù×÷ÏµÍ³¾Í»á½«µ±CPUÇ°Ïß³Ì¹ÒÆğ£¬Ö±µ½ÊÂ¼ş¶ÔÏó±»´¥·¢»òÕß³¬Ê±·¢Éú¡£
+	//WaitForSingleObjectå‘ŠçŸ¥æ“ä½œç³»ç»Ÿï¼ŒCPUçº¿ç¨‹éœ€è¦ç­‰å¾…ä¸€ä¸ªäº‹ä»¶å¯¹è±¡çš„çŠ¶æ€å˜ä¸ºæœ‰ä¿¡å·çŠ¶æ€ï¼ˆé€šè¿‡å…¶ä»–çº¿ç¨‹æ¿€æ´»ï¼‰ï¼Œæˆ–è€…ç­‰å¾…è¶…æ—¶ã€‚æ“ä½œç³»ç»Ÿå°±ä¼šå°†å½“CPUå‰çº¿ç¨‹æŒ‚èµ·ï¼Œç›´åˆ°äº‹ä»¶å¯¹è±¡è¢«è§¦å‘æˆ–è€…è¶…æ—¶å‘ç”Ÿã€‚
 	if (SUCCEEDED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent))) 
-    {    //Ê¹ÓÃSetEventOnCompletionº¯ÊıÉèÖÃÒ»¸öÊÂ¼ş£¬µ±GPUÍê³ÉÃüÁî²¢¸üĞÂÎ§À¸ÖµÊ±£¬´¥·¢¸ÃÊÂ¼ş
-        if (WaitForSingleObject(m_fenceEvent, 20000) != WAIT_OBJECT_0)//Éè¶¨¸ÃÏß³ÌË¯Ãß£¨×èÈûĞÍ£©£¬×î´óµÈ´ıÊ±¼ä20s
+    {    //ä½¿ç”¨SetEventOnCompletionå‡½æ•°è®¾ç½®ä¸€ä¸ªäº‹ä»¶ï¼Œå½“GPUå®Œæˆå‘½ä»¤å¹¶æ›´æ–°å›´æ å€¼æ—¶ï¼Œè§¦å‘è¯¥äº‹ä»¶
+        if (WaitForSingleObject(m_fenceEvent, 20000) != WAIT_OBJECT_0)//è®¾å®šè¯¥çº¿ç¨‹ç¡çœ ï¼ˆé˜»å¡å‹ï¼‰ï¼Œæœ€å¤§ç­‰å¾…æ—¶é—´20s
         {
             std::exit(-1);
-            //ÕâÀïÊÇÈç¹ûWaitForSingleObjectº¯ÊıµÄ·µ»ØÖµ²»ÎªWAIT_OBJECT_0£¨Ö¸¶¨¶ÔÏóµÄ×´Ì¬ÒÑ·¢³öĞÅºÅ£©£¬£¨³¬Ê±£©ÔòÍË³ö³ÌĞò¡£
+            //è¿™é‡Œæ˜¯å¦‚æœWaitForSingleObjectå‡½æ•°çš„è¿”å›å€¼ä¸ä¸ºWAIT_OBJECT_0ï¼ˆæŒ‡å®šå¯¹è±¡çš„çŠ¶æ€å·²å‘å‡ºä¿¡å·ï¼‰ï¼Œï¼ˆè¶…æ—¶ï¼‰åˆ™é€€å‡ºç¨‹åºã€‚
         }
     }
     else {
-        std::exit(-1); //ÍË³ö³ÌĞò
+        std::exit(-1); //é€€å‡ºç¨‹åº
     }
 }
 
-ID3D12GraphicsCommandList7* DXContext::InitCommandList()//¿ªÆôÃüÁîÁĞ±íÂ¼ÖÆ£¬·µ»ØÃüÁîÁĞ±íÖ¸Õë
+ID3D12GraphicsCommandList7* DXContext::InitCommandList()//å¼€å¯å‘½ä»¤åˆ—è¡¨å½•åˆ¶ï¼Œè¿”å›å‘½ä»¤åˆ—è¡¨æŒ‡é’ˆ
 {
 
     m_cmdAllocator->Reset();
-	m_cmdList->Reset(m_cmdAllocator, nullptr); //´«Èë·ÖÅäÆ÷ºÍ¹ÜÏß×´Ì¬£¨nullptr±íÊ¾²»Ê¹ÓÃÔ¤ÉèµÄ¹ÜÏß×´Ì¬¶ÔÏó£©
+	m_cmdList->Reset(m_cmdAllocator, nullptr); //ä¼ å…¥åˆ†é…å™¨å’Œç®¡çº¿çŠ¶æ€ï¼ˆnullptrè¡¨ç¤ºä¸ä½¿ç”¨é¢„è®¾çš„ç®¡çº¿çŠ¶æ€å¯¹è±¡ï¼‰
     return m_cmdList;
 }
 void DXContext::ExecuteCommandList()
 {
-    if (SUCCEEDED(m_cmdList->Close()))//ÃüÁîÁĞ±íÖ´ĞĞÇ°ĞèÒª¹Ø±ÕÃüÁîÂ¼ÖÆ
+    if (SUCCEEDED(m_cmdList->Close()))//å‘½ä»¤åˆ—è¡¨æ‰§è¡Œå‰éœ€è¦å…³é—­å‘½ä»¤å½•åˆ¶
     {
         ID3D12CommandList* lists[] = { m_cmdList };
-		m_cmdQueue->ExecuteCommandLists(1, lists);//Ìá½»ÃüÁîÁĞ±íµ½ÃüÁî¶ÓÁĞÖ´ĞĞ
-        //²ÎÊı:£¨ÒªÖ´ĞĞµÄÁĞ±íÊıÁ¿£¬ÁĞ±íÖ¸ÕëÊı×é£©
+        m_cmdQueue->ExecuteCommandLists(1, lists);//æäº¤å‘½ä»¤åˆ—è¡¨åˆ°å‘½ä»¤é˜Ÿåˆ—æ‰§è¡Œ
+        //å‚æ•°:ï¼ˆè¦æ‰§è¡Œçš„åˆ—è¡¨æ•°é‡ï¼Œåˆ—è¡¨æŒ‡é’ˆæ•°ç»„ï¼‰
         SignalAndWait();
     }
-}
+};
